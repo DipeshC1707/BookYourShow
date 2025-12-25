@@ -2,45 +2,106 @@ package main
 
 import (
 	"context"
+	"log"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"os"
+	"google.golang.org/grpc"
+
+	bookingpb "github.com/DipeshC1707/BookYourShow/proto/booking/v1"
 	"github.com/DipeshC1707/BookYourShow/booking/internal/db"
+	"github.com/DipeshC1707/BookYourShow/booking/internal/grpcserver"
 	"github.com/DipeshC1707/BookYourShow/booking/internal/inventoryclient"
 	"github.com/DipeshC1707/BookYourShow/booking/internal/service"
 )
 
 func main() {
-	ctx := context.Background()
+	// Root context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	inventory, err := inventoryclient.New("localhost:50051")
-	if err != nil {
-		panic(err)
+	// -------------------------
+	// Handle graceful shutdown
+	// -------------------------
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	// -------------------------
+	// Load configuration
+	// -------------------------
+	inventoryAddr := os.Getenv("INVENTORY_GRPC_ADDR")
+	if inventoryAddr == "" {
+		inventoryAddr = "localhost:50051"
 	}
-	defer inventory.Close()
 
-	dbConn, err := db.New(ctx, os.Getenv("BOOKING_DB_DSN"))
+	dbDSN := os.Getenv("BOOKING_DB_DSN")
+	if dbDSN == "" {
+		log.Fatal("BOOKING_DB_DSN is required")
+	}
+
+	grpcPort := os.Getenv("BOOKING_GRPC_PORT")
+	if grpcPort == "" {
+		grpcPort = "50052"
+	}
+
+	// -------------------------
+	// Connect to Inventory
+	// -------------------------
+	inventoryClient, err := inventoryclient.New(inventoryAddr)
 	if err != nil {
-	panic(err)
+		log.Fatalf("failed to connect to inventory: %v", err)
+	}
+	defer inventoryClient.Close()
+
+	// -------------------------
+	// Connect to Database
+	// -------------------------
+	dbConn, err := db.New(ctx, dbDSN)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
 	}
 	defer dbConn.Close()
 
-
+	// -------------------------
+	// Create Booking Service
+	// -------------------------
 	bookingService := service.NewBookingService(
-		inventory,
-		10*time.Minute,
+		inventoryClient,
+		dbConn,
+		10*time.Minute, // seat lock TTL
 	)
 
-	// TEMP test
-	_, err = bookingService.CreateBooking(
-		ctx,
-		"event1",
-		[]string{"A1", "A2"},
-		"user42",
-	)
+	// -------------------------
+	// Start gRPC server
+	// -------------------------
+	grpcServer := grpc.NewServer()
+
+	bookingGrpcServer := grpcserver.New(bookingService)
+	bookingpb.RegisterBookingServiceServer(grpcServer, bookingGrpcServer)
+
+	listener, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to listen on port %s: %v", grpcPort, err)
 	}
 
-	select {} // keep process alive
+	go func() {
+		log.Printf("Booking gRPC server started on :%s", grpcPort)
+		if err := grpcServer.Serve(listener); err != nil {
+			log.Fatalf("gRPC server error: %v", err)
+		}
+	}()
+
+	// -------------------------
+	// Wait for shutdown signal
+	// -------------------------
+	<-sigCh
+	log.Println("shutdown signal received")
+
+	grpcServer.GracefulStop()
+	cancel()
+
+	log.Println("booking service stopped gracefully")
 }

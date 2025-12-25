@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package booking.v1;
+
+option go_package = "github.com/DipeshC1707/BookYourShow/proto/booking/v1;bookingpb";
+
+service BookingService {
+  rpc CreateBooking(CreateBookingRequest) returns (CreateBookingResponse);
+  rpc ConfirmBooking(ConfirmBookingRequest) returns (ConfirmBookingResponse);
+}
+
+message CreateBookingRequest {
+  string event_id = 1;
+  repeated string seat_ids = 2;
+  string user_id = 3;
+}
+
+message CreateBookingResponse {
+  string booking_id = 1;
+}
+
+message ConfirmBookingRequest {
+  string booking_id = 1;
+}
+
+message ConfirmBookingResponse {
+  bool success = 1;
+}
