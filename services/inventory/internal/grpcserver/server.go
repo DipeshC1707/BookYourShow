@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/DipeshC1707/BookYourShow/proto/inventory/v1"
 	"github.com/DipeshC1707/BookYourShow/inventory/internal/service"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type Server struct {
@@ -39,4 +40,17 @@ func (s *Server) LockSeats(
 	return &inventorypb.LockSeatsResponse{
 		Success: true,
 	}, nil
+}
+
+func (s *Server) ReleaseSeats(
+	ctx context.Context,
+	req *inventorypb.ReleaseSeatsRequest,
+) (*emptypb.Empty, error) {
+
+	err := s.inventoryService.ReleaseSeats(ctx, req.EventId, req.SeatIds)
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
 }

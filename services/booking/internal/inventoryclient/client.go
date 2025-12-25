@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	grpcpb "github.com/DipeshC1707/BookYourShow/proto/inventory/v1"
+	inventorypb "github.com/DipeshC1707/BookYourShow/proto/inventory/v1"
 )
 
 type Client interface {
@@ -19,12 +19,19 @@ type Client interface {
 		ownerID string,
 	) error
 
+	ReleaseSeats(
+		ctx context.Context,
+		eventID string,
+		seatIDs []string,
+	) error
+
 	Close() error
 }
 
+
 type grpcClient struct {
 	conn   *grpc.ClientConn
-	client grpcpb.InventoryServiceClient
+	client inventorypb.InventoryServiceClient
 }
 
 func New(address string) (Client, error) {
@@ -40,7 +47,7 @@ func New(address string) (Client, error) {
 
 	return &grpcClient{
 		conn:   conn,
-		client: grpcpb.NewInventoryServiceClient(conn),
+		client: inventorypb.NewInventoryServiceClient(conn),
 	}, nil
 }
 
@@ -54,7 +61,7 @@ func (c *grpcClient) LockSeats(
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	resp, err := c.client.LockSeats(ctx, &grpcpb.LockSeatsRequest{
+	resp, err := c.client.LockSeats(ctx, &inventorypb.LockSeatsRequest{
 		EventId: eventID,
 		SeatIds: seatIDs,
 		OwnerId: ownerID,
@@ -72,4 +79,18 @@ func (c *grpcClient) LockSeats(
 
 func (c *grpcClient) Close() error {
 	return c.conn.Close()
+}
+
+func (c *grpcClient) ReleaseSeats(
+	ctx context.Context,
+	eventID string,
+	seatIDs []string,
+) error {
+
+	_, err := c.client.ReleaseSeats(ctx, &inventorypb.ReleaseSeatsRequest{
+		EventId: eventID,
+		SeatIds: seatIDs,
+	})
+
+	return err
 }

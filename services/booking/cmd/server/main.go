@@ -16,6 +16,7 @@ import (
 	"github.com/DipeshC1707/BookYourShow/booking/internal/grpcserver"
 	"github.com/DipeshC1707/BookYourShow/booking/internal/inventoryclient"
 	"github.com/DipeshC1707/BookYourShow/booking/internal/service"
+	"github.com/DipeshC1707/BookYourShow/booking/internal/expiration"
 )
 
 func main() {
@@ -65,15 +66,24 @@ func main() {
 	}
 	defer dbConn.Close()
 
+	  
 	// -------------------------
 	// Create Booking Service
 	// -------------------------
 	bookingService := service.NewBookingService(
 		inventoryClient,
 		dbConn,
-		10*time.Minute, // seat lock TTL
+		2*time.Minute, // seat lock TTL
 	)
 
+	expirer := expiration.NewRunner(
+		bookingService,
+		inventoryClient,
+		30*time.Second,
+	)
+	
+	go expirer.Start(ctx)
+	
 	// -------------------------
 	// Start gRPC server
 	// -------------------------

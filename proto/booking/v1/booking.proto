@@ -13,6 +13,7 @@ message CreateBookingRequest {
   string event_id = 1;
   repeated string seat_ids = 2;
   string user_id = 3;
+  string idempotency_key = 4;
 }
 
 message CreateBookingResponse {

@@ -1,12 +1,14 @@
 syntax = "proto3";
 
 package inventory.v1;
+import "google/protobuf/empty.proto";
 
 option go_package = "github.com/DipeshC1707/BookYourShow/proto/inventory/v1;inventorypb";
 
 
 service InventoryService {
   rpc LockSeats (LockSeatsRequest) returns (LockSeatsResponse);
+  rpc ReleaseSeats(ReleaseSeatsRequest) returns (google.protobuf.Empty);
 }
 
 message LockSeatsRequest {
@@ -18,4 +20,9 @@ message LockSeatsRequest {
 message LockSeatsResponse {
   bool success = 1;
   string error = 2;
+}
+
+message ReleaseSeatsRequest {
+  string event_id = 1;
+  repeated string seat_ids = 2;
 }

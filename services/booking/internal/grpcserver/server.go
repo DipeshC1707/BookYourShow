@@ -27,7 +27,8 @@ func (s *Server) CreateBooking(
 		ctx,
 		req.EventId,
 		req.SeatIds,
-		req.UserId,
+		req.UserId,	
+		req.IdempotencyKey,
 	)
 	if err != nil {
 		return nil, err

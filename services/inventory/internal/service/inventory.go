@@ -56,3 +56,17 @@ func (s *InventoryService) LockSeats(
 
 	return nil
 }
+
+func (s *InventoryService) ReleaseSeats(
+	ctx context.Context,
+	eventID string,
+	seatIDs []string,
+) error {
+	keys := make([]string, 0, len(seatIDs))
+	for _, seatID := range seatIDs {
+		key := fmt.Sprintf("seat:%s:%s", eventID, seatID)
+		keys = append(keys, key)
+	}
+
+	return s.redis.DeleteKeys(ctx, keys)
+}

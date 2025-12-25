@@ -42,7 +42,7 @@ func main() {
 	// 5️⃣ Create Inventory business service
 	inventoryService := service.NewInventoryService(
 		redisClient,
-		10*time.Minute, // seat lock TTL
+		2*time.Minute, // seat lock TTL
 	)
 
 	// 6️⃣ Start gRPC server

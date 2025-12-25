@@ -51,3 +51,10 @@ func (c *Client) LockSeats(
 
 	return result == 1, nil
 }
+
+func (c *Client) DeleteKeys(ctx context.Context, keys []string) error {
+	if len(keys) == 0 {
+		return nil
+	}
+	return c.rdb.Del(ctx, keys...).Err()
+}

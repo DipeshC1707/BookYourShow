@@ -199,3 +199,91 @@ func (s *BookingService) ConfirmBooking(
 	// TTL already protects us
 	return nil
 }
+
+type ExpiredBooking struct {
+	BookingID string
+	EventID   string
+	SeatIDs   []string
+}
+
+func (s *BookingService) FindExpiredBookings(
+	ctx context.Context,
+	limit int,
+) ([]ExpiredBooking, error) {
+
+	rows, err := s.db.Pool.Query(ctx, `
+		SELECT b.booking_id, b.event_id, bs.seat_id
+		FROM bookings b
+		JOIN booking_seats bs ON b.booking_id = bs.booking_id
+		WHERE b.status = 'CREATED'
+		  AND b.expires_at < now()
+		LIMIT $1
+	`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	m := map[string]*ExpiredBooking{}
+
+	for rows.Next() {
+		var bookingID, eventID, seatID string
+		if err := rows.Scan(&bookingID, &eventID, &seatID); err != nil {
+			return nil, err
+		}
+
+		if _, ok := m[bookingID]; !ok {
+			m[bookingID] = &ExpiredBooking{
+				BookingID: bookingID,
+				EventID:   eventID,
+			}
+		}
+		m[bookingID].SeatIDs = append(m[bookingID].SeatIDs, seatID)
+	}
+
+	result := make([]ExpiredBooking, 0, len(m))
+	for _, b := range m {
+		result = append(result, *b)
+	}
+
+	return result, nil
+}
+
+
+func (s *BookingService) CancelExpiredBooking(
+	ctx context.Context,
+	bookingID string,
+) error {
+
+	tx, err := s.db.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	ct, err := tx.Exec(ctx, `
+		UPDATE bookings
+		SET status = 'CANCELLED'
+		WHERE booking_id = $1
+		  AND status = 'CREATED'
+	`, bookingID)
+	if err != nil {
+		return err
+	}
+
+	// If nothing updated, booking was already handled
+	if ct.RowsAffected() == 0 {
+		return nil
+	}
+
+	_, err = tx.Exec(ctx, `
+		UPDATE booking_seats
+		SET status = 'CANCELLED'
+		WHERE booking_id = $1
+	`, bookingID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}

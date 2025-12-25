@@ -9,6 +9,7 @@ package inventorypb
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -133,20 +134,76 @@ func (x *LockSeatsResponse) GetError() string {
 	return ""
 }
 
+type ReleaseSeatsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	EventId       string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	SeatIds       []string               `protobuf:"bytes,2,rep,name=seat_ids,json=seatIds,proto3" json:"seat_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReleaseSeatsRequest) Reset() {
+	*x = ReleaseSeatsRequest{}
+	mi := &file_proto_inventory_v1_inventory_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReleaseSeatsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReleaseSeatsRequest) ProtoMessage() {}
+
+func (x *ReleaseSeatsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_inventory_v1_inventory_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReleaseSeatsRequest.ProtoReflect.Descriptor instead.
+func (*ReleaseSeatsRequest) Descriptor() ([]byte, []int) {
+	return file_proto_inventory_v1_inventory_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ReleaseSeatsRequest) GetEventId() string {
+	if x != nil {
+		return x.EventId
+	}
+	return ""
+}
+
+func (x *ReleaseSeatsRequest) GetSeatIds() []string {
+	if x != nil {
+		return x.SeatIds
+	}
+	return nil
+}
+
 var File_proto_inventory_v1_inventory_proto protoreflect.FileDescriptor
 
 const file_proto_inventory_v1_inventory_proto_rawDesc = "" +
 	"\n" +
-	"\"proto/inventory/v1/inventory.proto\x12\finventory.v1\"c\n" +
+	"\"proto/inventory/v1/inventory.proto\x12\finventory.v1\x1a\x1bgoogle/protobuf/empty.proto\"c\n" +
 	"\x10LockSeatsRequest\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x19\n" +
 	"\bseat_ids\x18\x02 \x03(\tR\aseatIds\x12\x19\n" +
 	"\bowner_id\x18\x03 \x01(\tR\aownerId\"C\n" +
 	"\x11LockSeatsResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05error2`\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\"K\n" +
+	"\x13ReleaseSeatsRequest\x12\x19\n" +
+	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x19\n" +
+	"\bseat_ids\x18\x02 \x03(\tR\aseatIds2\xab\x01\n" +
 	"\x10InventoryService\x12L\n" +
-	"\tLockSeats\x12\x1e.inventory.v1.LockSeatsRequest\x1a\x1f.inventory.v1.LockSeatsResponseBDZBgithub.com/DipeshC1707/BookYourShow/proto/inventory/v1;inventorypbb\x06proto3"
+	"\tLockSeats\x12\x1e.inventory.v1.LockSeatsRequest\x1a\x1f.inventory.v1.LockSeatsResponse\x12I\n" +
+	"\fReleaseSeats\x12!.inventory.v1.ReleaseSeatsRequest\x1a\x16.google.protobuf.EmptyBDZBgithub.com/DipeshC1707/BookYourShow/proto/inventory/v1;inventorypbb\x06proto3"
 
 var (
 	file_proto_inventory_v1_inventory_proto_rawDescOnce sync.Once
@@ -160,16 +217,20 @@ func file_proto_inventory_v1_inventory_proto_rawDescGZIP() []byte {
 	return file_proto_inventory_v1_inventory_proto_rawDescData
 }
 
-var file_proto_inventory_v1_inventory_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_proto_inventory_v1_inventory_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_proto_inventory_v1_inventory_proto_goTypes = []any{
-	(*LockSeatsRequest)(nil),  // 0: inventory.v1.LockSeatsRequest
-	(*LockSeatsResponse)(nil), // 1: inventory.v1.LockSeatsResponse
+	(*LockSeatsRequest)(nil),    // 0: inventory.v1.LockSeatsRequest
+	(*LockSeatsResponse)(nil),   // 1: inventory.v1.LockSeatsResponse
+	(*ReleaseSeatsRequest)(nil), // 2: inventory.v1.ReleaseSeatsRequest
+	(*emptypb.Empty)(nil),       // 3: google.protobuf.Empty
 }
 var file_proto_inventory_v1_inventory_proto_depIdxs = []int32{
 	0, // 0: inventory.v1.InventoryService.LockSeats:input_type -> inventory.v1.LockSeatsRequest
-	1, // 1: inventory.v1.InventoryService.LockSeats:output_type -> inventory.v1.LockSeatsResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: inventory.v1.InventoryService.ReleaseSeats:input_type -> inventory.v1.ReleaseSeatsRequest
+	1, // 2: inventory.v1.InventoryService.LockSeats:output_type -> inventory.v1.LockSeatsResponse
+	3, // 3: inventory.v1.InventoryService.ReleaseSeats:output_type -> google.protobuf.Empty
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -186,7 +247,7 @@ func file_proto_inventory_v1_inventory_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_inventory_v1_inventory_proto_rawDesc), len(file_proto_inventory_v1_inventory_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
